@@ -9,7 +9,8 @@ class DB {
         billName TEXT NOT NULL,
         amount REAL NOT NULL,
         paymentId TEXT,
-        year INTEGER NOT NULL
+        year INTEGER NOT NULL,
+        comment TEXT
       )");
 
     return $db;
