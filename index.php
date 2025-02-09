@@ -41,7 +41,7 @@
       <form id="addPayeeForm" class="border p-4 rounded shadow bg-gray-100">
         <h2 class="text-2xl font-bold mb-4">Add New Payee</h2>
 
-        <input type="text" id="newPayeeName" name="billName" class="bg-white border rounded p-2 w-5/6" placeholder="New Payee Name">
+        <input type="text" id="newPayeeName" name="payeeName" class="bg-white border rounded p-2 w-5/6" placeholder="New Payee Name">
 
         <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Add Payee</button>
       </form>

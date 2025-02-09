@@ -18,15 +18,27 @@ try {
   switch($action) {
     case 'add':
       $data = [
-        'date'      => (new DateTime($_POST['date']))->format('Y-m-d'), // Normalize to YYYY-MM-DD
-        'billName'  => $_POST['billName'],
-        'amount'    => (float)$_POST['amount'],
+        'date' => (new DateTime($_POST['date']))->format('Y-m-d'),
+        'payeeId' => $_POST['payeeId'], // Payee ID instead of name
+        'amount' => (float)$_POST['amount'],
         'paymentId' => $_POST['paymentId'],
-        'year'      => (int)explode('-', $_POST['date'])[0],
-        'comment'   => $_POST['comment']
+        'comment' => $_POST['comment'] ?? '',
+        'year' => (int)explode('-', $_POST['date'])[0]
       ];
 
-      $result = Bill::add($data);
+      $stmt = DB::connect()->prepare("
+        INSERT INTO bills (billDate, payeeId, amount, paymentId, comment, year)
+        VALUES (?, ?, ?, ?, ?, ?)
+      ");
+      $result = $stmt->execute([
+        $data['date'],
+        $data['payeeId'],
+        $data['amount'],
+        $data['paymentId'],
+        $data['comment'],
+        $data['year']
+      ]);
+
       echo json_encode(['success' => $result]);
       break;
 
@@ -75,17 +87,6 @@ try {
       }
       break;
 
-    case 'getPayees':
-      $stmt = DB::connect()->query("SELECT DISTINCT billName FROM bills ORDER BY billName ASC");
-      echo json_encode($stmt->fetchAll(PDO::FETCH_COLUMN));
-      break;
-
-    case 'addPayee':
-      $stmt = DB::connect()->prepare("INSERT INTO bills (billName) VALUES (?)");
-      $result = $stmt->execute([$_POST['billName']]);
-      echo json_encode(['success' => $result]);
-      break;
-
     case 'getAll':
       echo json_encode(Bill::getAll()->fetchAll(PDO::FETCH_ASSOC));
       break;
@@ -97,30 +98,56 @@ try {
       echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
       break;
 
-      case 'getTotals':
+    case 'getTotals':
       echo json_encode(Bill::getYearlyTotals()->fetchAll(PDO::FETCH_ASSOC));
       break;
 
     case 'getByYear':
       $year = $_GET['year'] ?? date('Y');
-      $sort = $_GET['sort'] ?? 'date_asc'; // Default sorting
+      $sort = $_GET['sort'] ?? 'date_desc';
 
       $sortOptions = [
-        'date_asc'  => 'billDate ASC',
-        'date_desc' => 'billDate DESC',
-        'payee'     => 'billName ASC, billDate ASC',
+        'date_asc' => 'bills.billDate ASC',
+        'date_desc' => 'bills.billDate DESC',
+        'payee' => 'payees.name ASC, bills.billDate ASC'
       ];
-
       $orderBy = $sortOptions[$sort] ?? $sortOptions['date_asc'];
 
-      $stmt = DB::connect()->prepare("SELECT * FROM bills WHERE year = ? ORDER BY $orderBy");
+      $stmt = DB::connect()->prepare("
+        SELECT bills.*, payees.name AS payeeName
+        FROM bills
+        JOIN payees ON bills.payeeId = payees.id
+        WHERE bills.year = ?
+        ORDER BY $orderBy
+      ");
       $stmt->execute([$year]);
       echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
       break;
 
+    case 'addPayee':
+      $stmt = DB::connect()->prepare("INSERT INTO payees (name) VALUES (?)");
+      $result = $stmt->execute([$_POST['payeeName']]);
+      echo json_encode(['success' => $result]);
+      break;
+
+    case 'getPayees':
+      try {
+        $stmt = DB::connect()->query("SELECT id, name FROM payees ORDER BY name ASC");
+        $payees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($payees);
+      } catch (Exception $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+      }
+      break;
+
     case 'getYears':
-      $stmt = DB::connect()->query("SELECT DISTINCT year FROM bills ORDER BY year DESC");
-      echo json_encode($stmt->fetchAll(PDO::FETCH_COLUMN));
+      try {
+        $stmt = DB::connect()->query("SELECT DISTINCT year FROM bills ORDER BY year DESC");
+        $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        echo json_encode($years);
+      } catch (Exception $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+      }
       break;
 
     default:

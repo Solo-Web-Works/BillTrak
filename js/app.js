@@ -31,21 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const response = await fetch('/includes/api.php?action=getPayees');
     const payees = await response.json();
 
-    const payeeSelect = document.getElementById('editFormBillName');
+    const payeeSelect = document.getElementById('billName');
     payeeSelect.innerHTML = ''; // Clear existing options
 
-    // Add default "Select Payee" option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Select Payee';
-    defaultOption.disabled = true;
-    payeeSelect.appendChild(defaultOption);
-
-    // Populate payees
     payees.forEach(payee => {
       const option = document.createElement('option');
-      option.value = payee;
-      option.textContent = payee;
+      option.value = payee.id; // Use payee ID as the value
+      option.textContent = payee.name; // Display payee name
       payeeSelect.appendChild(option);
     });
   }
@@ -77,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       billItem.innerHTML = `
       <p><strong>Date:</strong> ${formattedDate}</p>
-      <p><strong>Bill Name:</strong> ${bill.billName}</p>
+      <p><strong>Bill Name:</strong> ${bill.payeeName}</p>
       <p><strong>Amount:</strong> $${bill.amount.toFixed(2)}</p>
       <p><strong>Payment ID:</strong> ${bill.paymentId || 'N/A'}</p>
       <p><strong>Comment:</strong> ${bill.comment || 'N/A'}</p>
