@@ -10,15 +10,16 @@ class Bill {
     $db = DB::connect();
 
     $stmt = $db->prepare("INSERT INTO bills
-      (billDate, billName, amount, paymentId, year)
-      VALUES (?, ?, ?, ?, ?)");
+      (billDate, billName, amount, paymentId, year, comment)
+      VALUES (?, ?, ?, ?, ?, ?)");
 
     return $stmt->execute([
       $data['date'],
       $data['billName'],
       $data['amount'],
       $data['paymentId'],
-      $data['year']
+      $data['year'],
+      $data['comment']
     ]);
   }
 
