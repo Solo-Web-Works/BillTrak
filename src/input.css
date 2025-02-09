@@ -2,4 +2,15 @@
 @import "tailwindcss";
 
 /* Basic project styles */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
 
+  [class*="bg-white"] {
+    @apply bg-gray-800 text-gray-100;
+  }
+
+  [class*="bg-gray-100"],
+  [class*="bg-gray-50"] {
+    @apply bg-gray-700 text-gray-100;
+  }
+}

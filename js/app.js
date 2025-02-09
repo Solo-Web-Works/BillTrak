@@ -170,33 +170,33 @@ document.addEventListener('DOMContentLoaded', () => {
     ytdPieChart = new Chart(ctx, {
       type: 'pie',
       data: {
-        labels: labels,
-        datasets: [{
-          data: totals,
-          backgroundColor: [
-            '#003962', '#00607F', '#008B9C', '#00B8B9', '#00E6D6', '#00FFF4'
-          ], // Add more colors if needed
-          hoverBackgroundColor: [
-            '#042c4c', '#004968', '#007384', '#009FA1', '#00CCBD', '#00FBDA'
-          ]
-        }]
+      labels: labels,
+      datasets: [{
+        data: totals,
+        backgroundColor: [
+        '#003962', '#00607F', '#008B9C', '#00B8B9', '#00E6D6', '#00FFF4', '#007ACC' // New color added
+        ], // Add more colors if needed
+        hoverBackgroundColor: [
+        '#042c4c', '#004968', '#007384', '#009FA1', '#00CCBD', '#00FBDA', '#005BB5' // New hover color added
+        ]
+      }]
       },
       options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          },
-          tooltip: {
-            callbacks: {
-              label: function (tooltipItem) {
-                const value = tooltipItem.raw; // Raw data for this item
-                const percentage = ((value / overallTotal) * 100).toFixed(2); // Calculate percentage
-                return ` $${value.toFixed(2)} (${percentage}%)`;
-              }
-            }
+      responsive: true,
+      plugins: {
+        legend: {
+        position: 'bottom'
+        },
+        tooltip: {
+        callbacks: {
+          label: function (tooltipItem) {
+          const value = tooltipItem.raw; // Raw data for this item
+          const percentage = ((value / overallTotal) * 100).toFixed(2); // Calculate percentage
+          return ` $${value.toFixed(2)} (${percentage}%)`;
           }
         }
+        }
+      }
       }
     });
   }
@@ -289,6 +289,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close the modal
     document.getElementById('editModal').classList.add('hidden');
     document.getElementById('editModal').classList.remove('flex');
+  });
+
+  // Dark mode toggle
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const htmlElement    = document.documentElement;
+  const sunIcon        = document.getElementById('sunIcon');
+  const moonIcon       = document.getElementById('moonIcon');
+
+  // Function to update icons based on the current theme
+  function updateIcons() {
+    const isDarkMode = htmlElement.classList.contains('dark');
+    if (isDarkMode) {
+      sunIcon.classList.remove('hidden');
+      moonIcon.classList.add('hidden');
+    } else {
+      sunIcon.classList.add('hidden');
+      moonIcon.classList.remove('hidden');
+    }
+  }
+
+  // Check and apply the saved preference
+  const isDarkMode = localStorage.getItem('theme') === 'dark';
+  if (isDarkMode) {
+    htmlElement.classList.add('dark');
+  }
+
+  updateIcons();
+
+  // Add toggle functionality
+  darkModeToggle.addEventListener('click', () => {
+    if (htmlElement.classList.contains('dark')) {
+      htmlElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      htmlElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+
+    updateIcons();
   });
 
   // On page load

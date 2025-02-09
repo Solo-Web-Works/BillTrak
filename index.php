@@ -14,23 +14,36 @@
 
 <body class="bg-gray-100">
   <div class="container mx-auto p-4">
-    <h1 class="text-4xl font-bold mb-4">Bill Tracker</h1>
+    <div class="flex justify-between">
+      <h1 class="text-4xl font-bold p-4">Bill Tracker</h1>
+
+      <div class="flex justify-end p-4">
+        <button id="darkModeToggle" class="flex items-center focus:outline-none p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+          <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"  d="M 11 0 L 11 3 L 13 3 L 13 0 L 11 0 z M 4.2226562 2.8085938 L 2.8085938 4.2226562 L 4.9296875 6.34375 L 6.34375 4.9296875 L 4.2226562 2.8085938 z M 19.777344 2.8085938 L 17.65625 4.9296875 L 19.070312 6.34375 L 21.191406 4.2226562 L 19.777344 2.8085938 z M 12 5 C 8.1458514 5 5 8.1458514 5 12 C 5 15.854149 8.1458514 19 12 19 C 15.854149 19 19 15.854149 19 12 C 19 8.1458514 15.854149 5 12 5 z M 12 7 C 14.773268 7 17 9.2267316 17 12 C 17 14.773268 14.773268 17 12 17 C 9.2267316 17 7 14.773268 7 12 C 7 9.2267316 9.2267316 7 12 7 z M 0 11 L 0 13 L 3 13 L 3 11 L 0 11 z M 21 11 L 21 13 L 24 13 L 24 11 L 21 11 z M 4.9296875 17.65625 L 2.8085938 19.777344 L 4.2226562 21.191406 L 6.34375 19.070312 L 4.9296875 17.65625 z M 19.070312 17.65625 L 17.65625 19.070312 L 19.777344 21.191406 L 21.191406 19.777344 L 19.070312 17.65625 z M 11 21 L 11 24 L 13 24 L 13 21 L 11 21 z"></path>
+          </svg>
+          <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <!-- Add Bill Form -->
     <form id="billForm" class="bg-white p-4 mb-6 rounded shadow">
       <h2 class="text-2xl font-bold mb-4">Add New Payment</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <input type="date" name="date" required class="p-2 border rounded">
+        <input type="date" name="date" required class="p-2 border rounded bg-gray-50">
 
-        <select required id="payeeId" name="payeeId" class="border rounded p-2">
+        <select required id="payeeId" name="payeeId" class="border rounded p-2 bg-gray-50">
           <!-- Payees will be populated here -->
         </select>
 
-        <input type="number" step="0.01" name="amount" placeholder="Amount" required class="p-2 border rounded">
-        <input type="text" name="paymentId" placeholder="Payment ID" class="p-2 border rounded">
+        <input type="number" step="0.01" name="amount" placeholder="Amount" required class="p-2 border rounded bg-gray-50">
+        <input type="text" name="paymentId" placeholder="Payment ID" class="p-2 border rounded bg-gray-50">
 
-        <input type="text" name="comment" class="p-2 border rounded" placeholder="Add a comment (optional)"></input>
+        <input type="text" name="comment" class="p-2 border rounded bg-gray-50" placeholder="Add a comment (optional)"></input>
       </div>
 
       <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Add Bill</button>
@@ -88,7 +101,7 @@
 
           <div class="">
             <label for="yearSelect" class="block mb-2 font-bold">Select Year:</label>
-            <select id="yearSelect" class="border rounded px-3 py-2 bg-gray-50">
+            <select id="yearSelect" class="border rounded px-3 py-2 bg-gray-50 w-full">
               <option value="2025">2025</option>
               <option value="2024">2024</option>
               <option value="2023">2023</option>
