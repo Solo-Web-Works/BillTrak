@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const billList = document.getElementById('billList');
   const form = document.getElementById('billForm');
   const currentYear = new Date().getFullYear();
+  let ytdPieChart; // To hold the chart instance
 
   // Populate the year dropdown
   async function loadYears() {
@@ -140,10 +141,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  async function renderYtdPieChart(year) {
+    const response = await fetch(`/includes/api.php?action=getYtdAmounts&year=${year}`);
+    const data = await response.json();
+
+    // Extract payee amounts from the response
+    const payeeAmounts = data.payeeAmounts || [];
+    const overallTotal = data.overallAmount || 0;
+
+    if (overallTotal === 0) {
+      console.warn('Overall total is zero. No data available for the chart.');
+      return;
+    }
+
+    // Extract labels (payee names) and data (YTD totals)
+    const labels = payeeAmounts.map(item => item.payeeName);
+    const totals = payeeAmounts.map(item => item.totalAmount);
+
+    // Get the chart canvas
+    const ctx = document.getElementById('ytdPieChart').getContext('2d');
+
+    // Destroy the existing chart if it exists
+    if (ytdPieChart) {
+      ytdPieChart.destroy();
+    }
+
+    // Create a new pie chart
+    ytdPieChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: totals,
+          backgroundColor: [
+            '#003962', '#00607F', '#008B9C', '#00B8B9', '#00E6D6', '#00FFF4'
+          ], // Add more colors if needed
+          hoverBackgroundColor: [
+            '#042c4c', '#004968', '#007384', '#009FA1', '#00CCBD', '#00FBDA'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function (tooltipItem) {
+                const value = tooltipItem.raw; // Raw data for this item
+                const percentage = ((value / overallTotal) * 100).toFixed(2); // Calculate percentage
+                return ` $${value.toFixed(2)} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+
   // Add event listener for year selection
   yearSelect.addEventListener('change', (e) => {
     const selectedYear = e.target.value;
-    loadYtdAmounts(selectedYear);
+    loadYtdAmounts(selectedYear);              // Update YTD amounts when the year changes
+    renderYtdPieChart(selectedYear);           // Update the pie chart when the year changes
     loadBills(selectedYear, sortSelect.value); // Use the selected sort order
   });
 
@@ -229,7 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // On page load
-  loadPayees('payeeId');
-  loadYears();
-  loadYtdAmounts(currentYear);
+  loadPayees('payeeId');          // Load payees
+  loadYears();                    // Load years
+  loadYtdAmounts(currentYear);    // Load YTD amounts for the current year
+  renderYtdPieChart(currentYear); // Render the pie chart for the current year
 });

@@ -179,6 +179,7 @@ try {
         ORDER BY payees.name ASC
       ");
       $stmt->execute([$year]);
+
       $payeeAmounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       // Fetch overall YTD amount

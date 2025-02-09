@@ -48,12 +48,12 @@
 
       <!-- Chart & Totals -->
       <div class="border p-4 rounded shadow bg-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div id="chartSection" class="bg-white p-4 rounded shadow mb-6">
-          <h3 class="text-xl font-bold mb-4">Chart</h3>
-          <canvas id="chart"></canvas>
+        <div id="ytdPieChartSection" class="bg-white p-4 rounded shadow">
+          <h3 class="text-xl font-bold mb-4">YTD Chart</h3>
+          <canvas id="ytdPieChart"></canvas>
         </div>
 
-        <div id="ytdSection" class="bg-white p-4 rounded shadow mb-6">
+        <div id="ytdSection" class="bg-white p-4 rounded shadow">
           <h3 class="text-xl font-bold mb-4">Year-to-Date Summary</h3>
 
           <div id="ytdOverall" class="mb-4">
