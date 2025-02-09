@@ -18,18 +18,25 @@ try {
   switch($action) {
     case 'add':
       $data = [
-        'date' => (new DateTime($_POST['date']))->format('Y-m-d'),
-        'payeeId' => $_POST['payeeId'], // Payee ID instead of name
-        'amount' => (float)$_POST['amount'],
+        'date'      => (new DateTime($_POST['date']))->format('Y-m-d'),
+        'payeeId'   => $_POST['payeeId'], // Payee ID instead of name
+        'amount'    => (float)$_POST['amount'],
         'paymentId' => $_POST['paymentId'],
-        'comment' => $_POST['comment'] ?? '',
-        'year' => (int)explode('-', $_POST['date'])[0]
+        'comment'   => $_POST['comment'] ?? '',
+        'year'      => (int)explode('-', $_POST['date'])[0]
       ];
+
+       // Validate required fields
+      if (empty($data['date']) || empty($data['payeeId']) || $data['amount'] <= 0) {
+        echo json_encode(['error' => 'Missing required fields.']);
+        exit;
+      }
 
       $stmt = DB::connect()->prepare("
         INSERT INTO bills (billDate, payeeId, amount, paymentId, comment, year)
         VALUES (?, ?, ?, ?, ?, ?)
       ");
+
       $result = $stmt->execute([
         $data['date'],
         $data['payeeId'],
@@ -49,27 +56,27 @@ try {
         $data = [
           'id'        => $_POST['id'],
           'date'      => (new DateTime($_POST['date']))->format('Y-m-d'),
-          'billName'  => $_POST['billName'],
+          'payeeId'   => $_POST['payeeId'],
           'amount'    => (float)$_POST['amount'],
           'paymentId' => $_POST['paymentId'],
           'comment'   => $_POST['comment'] ?? ''
         ];
 
         // Validate required fields
-        if (empty($data['id']) || empty($data['date']) || empty($data['billName']) || $data['amount'] <= 0) {
+        if (empty($data['id']) || empty($data['date']) || empty($data['payeeId']) || $data['amount'] <= 0) {
           throw new MissingRequiredException('Missing required fields.');
         }
 
         // Prepare and execute the update statement
         $stmt = DB::connect()->prepare("
           UPDATE bills
-          SET billDate = ?, billName = ?, amount = ?, paymentId = ?, comment = ?
+          SET billDate = ?, payeeId = ?, amount = ?, paymentId = ?, comment = ?
           WHERE id = ?
         ");
 
         $result = $stmt->execute([
           $data['date'],
-          $data['billName'],
+          $data['payeeId'],
           $data['amount'],
           $data['paymentId'],
           $data['comment'],
@@ -93,9 +100,18 @@ try {
 
     case 'getById':
       $id = $_GET['id'];
-      $stmt = DB::connect()->prepare("SELECT * FROM bills WHERE id = ?");
+
+      $stmt = DB::connect()->prepare("
+        SELECT bills.*, payees.name AS payeeName, payees.id AS payeeId
+        FROM bills
+        JOIN payees ON bills.payeeId = payees.id
+        WHERE bills.id = ?
+      ");
       $stmt->execute([$id]);
-      echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
+
+      $bill = $stmt->fetch(PDO::FETCH_ASSOC);
+
+      echo json_encode($bill);
       break;
 
     case 'getTotals':
@@ -148,6 +164,37 @@ try {
       } catch (Exception $e) {
         echo json_encode(['error' => $e->getMessage()]);
       }
+      break;
+
+    case 'getYtdAmounts':
+      $year = $_GET['year'] ?? date('Y');
+
+      // Fetch YTD amounts for each payee
+      $stmt = DB::connect()->prepare("
+        SELECT payees.name AS payeeName, SUM(bills.amount) AS totalAmount
+        FROM bills
+        JOIN payees ON bills.payeeId = payees.id
+        WHERE bills.year = ?
+        GROUP BY payees.name
+        ORDER BY payees.name ASC
+      ");
+      $stmt->execute([$year]);
+      $payeeAmounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      // Fetch overall YTD amount
+      $stmt = DB::connect()->prepare("
+        SELECT SUM(amount) AS overallAmount
+        FROM bills
+        WHERE year = ?
+      ");
+      $stmt->execute([$year]);
+
+      $overallAmount = $stmt->fetch(PDO::FETCH_ASSOC)['overallAmount'] ?? 0;
+
+      echo json_encode([
+        'payeeAmounts' => $payeeAmounts,
+        'overallAmount' => $overallAmount
+      ]);
       break;
 
     default:

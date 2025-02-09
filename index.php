@@ -18,13 +18,13 @@
 
     <!-- Add Bill Form -->
     <form id="billForm" class="bg-white p-4 mb-6 rounded shadow">
-      <h2 class="text-2xl font-bold mb-4">Bill Payments</h2>
+      <h2 class="text-2xl font-bold mb-4">Add New Payment</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <input type="date" name="date" required class="p-2 border rounded">
 
-        <select required id="billName" name="billName" class="border rounded p-2">
-          <option value="" disabled selected>Select Payee</option>
+        <select required id="payeeId" name="payeeId" class="border rounded p-2">
+          <!-- Payees will be populated here -->
         </select>
 
         <input type="number" step="0.01" name="amount" placeholder="Amount" required class="p-2 border rounded">
@@ -46,10 +46,28 @@
         <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Add Payee</button>
       </form>
 
-      <!-- Chart -->
-      <div class="border p-4 rounded shadow bg-gray-100">
-        <h2 class="text-2xl font-bold mb-4">Chart</h2>
-        <canvas id="chart"></canvas>
+      <!-- Chart & Totals -->
+      <div class="border p-4 rounded shadow bg-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div id="chartSection" class="bg-white p-4 rounded shadow mb-6">
+          <h3 class="text-xl font-bold mb-4">Chart</h3>
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div id="ytdSection" class="bg-white p-4 rounded shadow mb-6">
+          <h3 class="text-xl font-bold mb-4">Year-to-Date Summary</h3>
+
+          <div id="ytdOverall" class="mb-4">
+            <h3 class="text-lg font-semibold mb-0 inline-block">Overall YTD Amount:</h3> <span id="ytdOverallAmount" class="text-lg font-semibold">$0.00</span>
+          </div>
+
+          <div id="ytdPayees">
+            <h3 class="text-lg font-semibold mb-0 inline-block">YTD by Payee:</h3>
+
+            <ul id="ytdPayeeList" class="list-none pl-0">
+              <!-- Payee amounts will be populated here -->
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -100,8 +118,8 @@
 
         <!-- Bill Name -->
         <div>
-          <label for="editFormBillName" class="block text-sm font-medium">Payee</label>
-          <select id="editFormBillName" name="billName" class="border rounded px-3 py-2 w-full">
+          <label for="editFormPayeeId" class="block text-sm font-medium">Payee</label>
+          <select id="editFormPayeeId" name="payeeId" class="border rounded px-3 py-2 w-full">
             <option value="" disabled>Select Payee</option>
             <!-- Options will be populated dynamically -->
           </select>

@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sortSelect = document.getElementById('sortSelect');
   const billList = document.getElementById('billList');
   const form = document.getElementById('billForm');
+  const currentYear = new Date().getFullYear();
 
   // Populate the year dropdown
   async function loadYears() {
@@ -27,12 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Fetch and display payees
-  async function loadPayees() {
+  async function loadPayees(selectId) {
     const response = await fetch('/includes/api.php?action=getPayees');
     const payees = await response.json();
 
-    const payeeSelect = document.getElementById('billName');
+    const payeeSelect = document.getElementById(selectId || 'payeeId');
+
     payeeSelect.innerHTML = ''; // Clear existing options
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select Payee';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    payeeSelect.appendChild(defaultOption);
 
     payees.forEach(payee => {
       const option = document.createElement('option');
@@ -73,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <p><strong>Amount:</strong> $${bill.amount.toFixed(2)}</p>
       <p><strong>Payment ID:</strong> ${bill.paymentId || 'N/A'}</p>
       <p><strong>Comment:</strong> ${bill.comment || 'N/A'}</p>
-      <button class="block absolute top-2 right-2 border text-gray-500 hover:text-gray-700 px-2 py-0 rounded" data-id="${bill.id}">Edit</button>
+      <button class="block absolute top-2 right-2 px-2 py-0 pb-1 rounded bg-green-500 text-white hover:bg-green-600" data-id="${bill.id}">Edit</button>
       `;
 
       billList.appendChild(billItem);
@@ -99,17 +108,42 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('editFormComment').value   = bill.comment || '';
 
     // Populate the payee dropdown and select the correct option
-    await loadPayees(); // Ensure the payee dropdown is populated
-    document.getElementById('editFormBillName').value  = bill.billName;
+    await loadPayees('editFormPayeeId'); // Ensure the payee dropdown is populated
+
+    const payeeDropdown = document.getElementById('editFormPayeeId');
+    payeeDropdown.value = bill.payeeId; // Use payeeId instead of billName
 
     // Open the modal
     document.getElementById('editModal').classList.add('flex');
     document.getElementById('editModal').classList.remove('hidden');
   }
 
+  async function loadYtdAmounts(year) {
+    const response = await fetch(`/includes/api.php?action=getYtdAmounts&year=${year}`);
+    const data = await response.json();
+
+    // Display overall YTD amount
+    const ytdOverallAmount = document.getElementById('ytdOverallAmount');
+    ytdOverallAmount.textContent = `$${(data.overallAmount || 0).toFixed(2)}`;
+
+    // Display YTD amounts by payee
+    const ytdPayeeList = document.getElementById('ytdPayeeList');
+    ytdPayeeList.innerHTML = ''; // Clear existing items
+
+    data.payeeAmounts.forEach(payee => {
+      const listItem = document.createElement('li');
+      const strongElement = document.createElement('strong');
+      strongElement.textContent = `${payee.payeeName}:`;
+      listItem.appendChild(strongElement);
+      listItem.appendChild(document.createTextNode(` $${payee.totalAmount.toFixed(2)}`));
+      ytdPayeeList.appendChild(listItem);
+    });
+  }
+
   // Add event listener for year selection
   yearSelect.addEventListener('change', (e) => {
     const selectedYear = e.target.value;
+    loadYtdAmounts(selectedYear);
     loadBills(selectedYear, sortSelect.value); // Use the selected sort order
   });
 
@@ -117,6 +151,26 @@ document.addEventListener('DOMContentLoaded', () => {
   sortSelect.addEventListener('change', (e) => {
     const selectedSort = e.target.value;
     loadBills(yearSelect.value, selectedSort); // Use the selected year
+  });
+
+  // Add new bill
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    const response = await fetch('/includes/api.php?action=add', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      form.reset();
+      loadYears(); // Reload years in case a new year was added
+      loadYtdAmounts(yearSelect.value); // Reload YTD amounts
+    } else {
+      alert('Failed to add bill. Please try again.');
+    }
   });
 
   // Add new payee
@@ -130,28 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (response.ok) {
-      loadPayees(); // Reload payee dropdown
+      loadPayees('payeeId'); // Reload payee dropdown
       e.target.reset(); // Clear the form
     } else {
       alert('Failed to add payee. Please try again.');
-    }
-  });
-
-  // Add new bill
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const response = await fetch('/includes/api.php?action=add', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (response.ok) {
-      form.reset();
-      loadYears(); // Reload years in case a new year was added
-    } else {
-      alert('Failed to add bill. Please try again.');
     }
   });
 
@@ -193,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // On page load
+  loadPayees('payeeId');
   loadYears();
-  loadPayees();
+  loadYtdAmounts(currentYear);
 });
