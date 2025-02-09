@@ -1,0 +1,29 @@
+services:
+  app:
+    container_name: BillTrak
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # depends_on:
+    #   - redis
+
+    # environment:
+    #   - REDIS_HOST=redis
+    #   - REDIS_PORT=6379
+
+    ports:
+      - "8888:80" # Map port 8080 on the host to port 80 in the container
+
+    volumes:
+      - .:/var/www/html # Mount the current directory for live development
+      - ./data/bills.db:/var/www/html/data/bills.db # Persist SQLite data
+
+  # redis:
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   image: redis:latest
+
+  #   ports:
+  #     - "6379:6379"
