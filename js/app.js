@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('editFormBillName').value  = bill.billName;
 
     // Open the modal
+    document.getElementById('editModal').classList.add('flex');
     document.getElementById('editModal').classList.remove('hidden');
   }
 
@@ -191,11 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Event listener for close button in the modal
   document.getElementById('editFormCancel').addEventListener('click', () => {
-    // Close the modal
-    document.getElementById('editModal').classList.add('hidden');
-
     // Clear modal fields
     document.getElementById('editForm').reset();
+
+    // Close the modal
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editModal').classList.remove('flex');
   });
 
   // On page load
