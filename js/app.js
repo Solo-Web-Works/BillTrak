@@ -4,12 +4,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const billList = document.getElementById('billList');
   const form = document.getElementById('billForm');
   const currentYear = new Date().getFullYear();
+  const importModal = document.getElementById('importModal');
+  const openImportButton = document.getElementById('openImportModal');
+  const importCancelButton = document.getElementById('importCancel');
+  const importForm = document.getElementById('importForm');
+  const importFileInput = document.getElementById('importFile');
   let ytdPieChart; // To hold the chart instance
 
   // Populate the year dropdown
-  async function loadYears() {
+  async function loadYears(preferredYear) {
     const response = await fetch('/includes/api.php?action=getYears');
     const years = await response.json();
+    const yearStrings = years.map(String);
 
     yearSelect.innerHTML = ''; // Clear existing options
     years.forEach(year => {
@@ -21,8 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set default year to the most recent one
     if (years.length > 0) {
-      yearSelect.value = years[0];
-      loadBills(years[0], sortSelect.value); // Load bills for the most recent year with the default sort order
+      const targetYear = yearStrings.includes(String(preferredYear)) ? preferredYear : years[0];
+      yearSelect.value = targetYear;
+      await loadBills(targetYear, sortSelect.value); // Load bills for the most recent year with the default sort order
     } else {
       billList.innerHTML = '<p class="text-gray-500">No data available.</p>';
     }
@@ -289,6 +296,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close the modal
     document.getElementById('editModal').classList.add('hidden');
     document.getElementById('editModal').classList.remove('flex');
+  });
+
+  // Import modal
+  function openImportModal() {
+    importModal.classList.add('flex');
+    importModal.classList.remove('hidden');
+  }
+
+  function closeImportModal() {
+    importForm.reset();
+    importModal.classList.add('hidden');
+    importModal.classList.remove('flex');
+  }
+
+  openImportButton.addEventListener('click', openImportModal);
+  importCancelButton.addEventListener('click', closeImportModal);
+
+  importForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!importFileInput.files.length) {
+      alert('Please choose a CSV file to import.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', importFileInput.files[0]);
+
+    const response = await fetch('/includes/api.php?action=importCsv', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      alert(data.error || 'Failed to import CSV.');
+      return;
+    }
+
+    const result = data.result || {};
+    const summaryLines = [
+      `Imported ${result.inserted ?? 0} bills.`,
+      `Skipped ${result.skipped ?? 0} duplicates.`,
+      `Added ${result.payeesCreated ?? 0} new payees.`
+    ];
+
+    if (result.errors && result.errors.length) {
+      summaryLines.push('Warnings:', result.errors.map((msg) => `- ${msg}`).join('\n'));
+    }
+
+    alert(summaryLines.join('\n'));
+
+    closeImportModal();
+    await loadYears(yearSelect.value);
+    await loadYtdAmounts(yearSelect.value);
+    await renderYtdPieChart(yearSelect.value);
   });
 
   // Dark mode toggle

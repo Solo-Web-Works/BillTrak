@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 require_once './bill.php';
 require_once './db.php';
+require_once __DIR__.'/../data/import.php';
 
 header('Content-Type: application/json');
 
@@ -196,6 +197,36 @@ try {
         'payeeAmounts' => $payeeAmounts,
         'overallAmount' => $overallAmount
       ]);
+      break;
+
+    case 'importCsv':
+      try {
+        if (!isset($_FILES['file'])) {
+          throw new MissingRequiredException('No file uploaded.');
+        }
+
+        if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+          throw new RuntimeException('Upload failed with error code '.$_FILES['file']['error']);
+        }
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'billtrak_csv_');
+        if (!$tmpPath || !move_uploaded_file($_FILES['file']['tmp_name'], $tmpPath)) {
+          throw new RuntimeException('Could not process uploaded file.');
+        }
+
+        try {
+          $result = importCsvToDatabase($tmpPath);
+        } finally {
+          if (is_file($tmpPath)) {
+            unlink($tmpPath);
+          }
+        }
+
+        echo json_encode(['success' => true, 'result' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
       break;
 
     default:
