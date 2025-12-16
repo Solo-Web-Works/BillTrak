@@ -142,9 +142,67 @@ try {
       break;
 
     case 'addPayee':
-      $stmt = DB::connect()->prepare("INSERT INTO payees (name) VALUES (?)");
-      $result = $stmt->execute([$_POST['payeeName']]);
-      echo json_encode(['success' => $result]);
+      try {
+        $name = trim($_POST['payeeName'] ?? '');
+        if ($name === '') {
+          throw new MissingRequiredException('Payee name is required.');
+        }
+
+        $stmt = DB::connect()->prepare("INSERT INTO payees (name) VALUES (?)");
+        $result = $stmt->execute([$name]);
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
+      break;
+
+    case 'editPayee':
+      try {
+        $id = $_POST['id'] ?? null;
+        $name = trim($_POST['payeeName'] ?? '');
+
+        if (empty($id) || $name === '') {
+          throw new MissingRequiredException('Missing payee id or name.');
+        }
+
+        $stmt = DB::connect()->prepare("UPDATE payees SET name = ? WHERE id = ?");
+        $result = $stmt->execute([$name, $id]);
+
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
+      break;
+
+    case 'deletePayee':
+      try {
+        $id = $_POST['id'] ?? null;
+
+        if (empty($id)) {
+          throw new MissingRequiredException('Missing payee id.');
+        }
+
+        $db = DB::connect();
+
+        // Block deletion if payee is still referenced by bills
+        $usage = $db->prepare("SELECT COUNT(*) FROM bills WHERE payeeId = ?");
+        $usage->execute([$id]);
+        $billCount = (int)$usage->fetchColumn();
+
+        if ($billCount > 0) {
+          throw new RuntimeException('Cannot delete payee while bills reference it.');
+        }
+
+        $stmt = $db->prepare("DELETE FROM payees WHERE id = ?");
+        $result = $stmt->execute([$id]);
+
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
       break;
 
     case 'getPayees':
