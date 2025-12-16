@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 require_once './bill.php';
 require_once './db.php';
+require_once __DIR__.'/../data/import.php';
 
 header('Content-Type: application/json');
 
@@ -141,9 +142,67 @@ try {
       break;
 
     case 'addPayee':
-      $stmt = DB::connect()->prepare("INSERT INTO payees (name) VALUES (?)");
-      $result = $stmt->execute([$_POST['payeeName']]);
-      echo json_encode(['success' => $result]);
+      try {
+        $name = trim($_POST['payeeName'] ?? '');
+        if ($name === '') {
+          throw new MissingRequiredException('Payee name is required.');
+        }
+
+        $stmt = DB::connect()->prepare("INSERT INTO payees (name) VALUES (?)");
+        $result = $stmt->execute([$name]);
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
+      break;
+
+    case 'editPayee':
+      try {
+        $id = $_POST['id'] ?? null;
+        $name = trim($_POST['payeeName'] ?? '');
+
+        if (empty($id) || $name === '') {
+          throw new MissingRequiredException('Missing payee id or name.');
+        }
+
+        $stmt = DB::connect()->prepare("UPDATE payees SET name = ? WHERE id = ?");
+        $result = $stmt->execute([$name, $id]);
+
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
+      break;
+
+    case 'deletePayee':
+      try {
+        $id = $_POST['id'] ?? null;
+
+        if (empty($id)) {
+          throw new MissingRequiredException('Missing payee id.');
+        }
+
+        $db = DB::connect();
+
+        // Block deletion if payee is still referenced by bills
+        $usage = $db->prepare("SELECT COUNT(*) FROM bills WHERE payeeId = ?");
+        $usage->execute([$id]);
+        $billCount = (int)$usage->fetchColumn();
+
+        if ($billCount > 0) {
+          throw new RuntimeException('Cannot delete payee while bills reference it.');
+        }
+
+        $stmt = $db->prepare("DELETE FROM payees WHERE id = ?");
+        $result = $stmt->execute([$id]);
+
+        echo json_encode(['success' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
       break;
 
     case 'getPayees':
@@ -196,6 +255,36 @@ try {
         'payeeAmounts' => $payeeAmounts,
         'overallAmount' => $overallAmount
       ]);
+      break;
+
+    case 'importCsv':
+      try {
+        if (!isset($_FILES['file'])) {
+          throw new MissingRequiredException('No file uploaded.');
+        }
+
+        if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+          throw new RuntimeException('Upload failed with error code '.$_FILES['file']['error']);
+        }
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'billtrak_csv_');
+        if (!$tmpPath || !move_uploaded_file($_FILES['file']['tmp_name'], $tmpPath)) {
+          throw new RuntimeException('Could not process uploaded file.');
+        }
+
+        try {
+          $result = importCsvToDatabase($tmpPath);
+        } finally {
+          if (is_file($tmpPath)) {
+            unlink($tmpPath);
+          }
+        }
+
+        echo json_encode(['success' => true, 'result' => $result]);
+      } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+      }
       break;
 
     default:

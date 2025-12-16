@@ -46,7 +46,10 @@
         <input type="text" name="comment" class="p-2 border rounded bg-gray-50" placeholder="Add a comment (optional)"></input>
       </div>
 
-      <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Add Bill</button>
+      <div class="flex items-center gap-4 mt-4">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add Bill</button>
+        <button type="button" id="openImportModal" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Import CSV</button>
+      </div>
     </form>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 mb-6 rounded shadow">
@@ -57,13 +60,20 @@
         <input type="text" id="newPayeeName" name="payeeName" class="bg-white border rounded p-2 w-5/6" placeholder="New Payee Name">
 
         <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Add Payee</button>
+
+        <div class="mt-4">
+          <h3 class="text-lg font-semibold mb-2">Manage Payees</h3>
+          <p id="payeeListEmpty" class="text-gray-500 text-sm">No payees yet.</p>
+          <ul id="payeeList" class="list-none pl-0 space-y-2 text-sm"></ul>
+        </div>
       </form>
 
       <!-- Chart & Totals -->
       <div class="border p-4 rounded shadow bg-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div id="ytdPieChartSection" class="bg-white p-4 rounded shadow">
           <h3 class="text-xl font-bold mb-4">YTD Chart</h3>
-          <canvas id="ytdPieChart"></canvas>
+          <canvas id="ytdPieChart" height="320"></canvas>
+          <div id="ytdLegend" class="mt-4 flex flex-wrap gap-3 text-sm text-gray-500"></div>
         </div>
 
         <div id="ytdSection" class="bg-white p-4 rounded shadow">
@@ -160,6 +170,24 @@
         <div class="flex justify-end space-x-2">
           <button type="button" id="editFormCancel" class="bg-red-300 px-4 py-2 rounded hover:bg-red-400">Cancel</button>
           <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div id="importModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 class="text-xl font-bold mb-4">Import CSV</h2>
+      <form id="importForm" class="space-y-4">
+        <div>
+          <label for="importFile" class="block text-sm font-medium">Select CSV File</label>
+          <input type="file" id="importFile" name="file" accept=".csv,text/csv" class="border rounded px-3 py-2 w-full bg-gray-50">
+        </div>
+
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="importCancel" class="bg-red-300 px-4 py-2 rounded hover:bg-red-400">Cancel</button>
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Upload &amp; Import</button>
         </div>
       </form>
     </div>

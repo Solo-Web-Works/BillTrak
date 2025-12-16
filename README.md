@@ -54,6 +54,12 @@ BillTrak is a lightweight, web-based application designed to help users manage a
    http://localhost:8888
    ```
 
+## CSV Import
+- Prepare a CSV file with the headers `Date, Payee, Reference Number, Amount` (see `2025.csv` for an example layout).
+- From the project root, run `php data/import.php <csv-file>` (you can pass multiple files to import them in one go).
+- The importer creates missing payees automatically and skips duplicate bills that match date + payee + amount + reference number.
+- Data is written into `data/bills.db`, so be sure that file exists (copy `data/bills-sample.db` to `data/bills.db` if you need a starting point).
+
 ## Usage
 1. **Adding a Bill**:
    - Fill out the "Add New Payment" form with date, payee, amount, and optional details
