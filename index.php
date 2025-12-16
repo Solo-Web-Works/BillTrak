@@ -72,7 +72,8 @@
       <div class="border p-4 rounded shadow bg-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div id="ytdPieChartSection" class="bg-white p-4 rounded shadow">
           <h3 class="text-xl font-bold mb-4">YTD Chart</h3>
-          <canvas id="ytdPieChart"></canvas>
+          <canvas id="ytdPieChart" height="320"></canvas>
+          <div id="ytdLegend" class="mt-4 flex flex-wrap gap-3 text-sm text-gray-500"></div>
         </div>
 
         <div id="ytdSection" class="bg-white p-4 rounded shadow">

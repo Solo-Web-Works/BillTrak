@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get the chart canvas
     const ctx = document.getElementById('ytdPieChart').getContext('2d');
+    const legendContainer = document.getElementById('ytdLegend');
 
     // Destroy the existing chart if it exists
     if (ytdPieChart) {
@@ -214,10 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       options: {
       responsive: true,
+      maintainAspectRatio: true,
+      layout: {
+        padding: {top: 8, bottom: 8}
+      },
       plugins: {
         legend: {
-        position: 'bottom'
-        },
+        display: false
+        }, // We render a custom legend below
         tooltip: {
         callbacks: {
           label: function (tooltipItem) {
@@ -230,6 +235,33 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       }
     });
+
+    // Custom legend rendering in two columns, lighter text
+    if (legendContainer) {
+      legendContainer.innerHTML = '';
+      legendContainer.className = 'mt-4 grid grid-cols-2 gap-3 text-sm text-gray-500';
+
+      const colors = ytdPieChart.data.datasets[0].backgroundColor;
+      labels.forEach((label, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center gap-3';
+
+        const swatch = document.createElement('span');
+        swatch.style.display = 'inline-block';
+        swatch.style.width = '12px';
+        swatch.style.height = '12px';
+        swatch.style.borderRadius = '9999px';
+        swatch.style.backgroundColor = colors[idx % colors.length];
+
+        const text = document.createElement('span');
+        text.textContent = label;
+        text.className = 'text-gray-200';
+
+        item.appendChild(swatch);
+        item.appendChild(text);
+        legendContainer.appendChild(item);
+      });
+    }
   }
 
 
